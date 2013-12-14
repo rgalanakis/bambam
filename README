@@ -1,11 +1,22 @@
-Installation using source package (command line instructions)
+bambam
+======
 
-make sure you have pygame installed first!
+bambam is a full screen keyboard mashing game for babies.
 
-1. unpack bambam-0.4 to create the bambam-0.4 directory
-	tar zxvf bambam-0.4.tar.gz
-2. move into the bambam directory
-	cd bambam-0.4
-3. execute 
-	./bambam.py
-4. to exit, type quit
+To quit the game, type 'quit'.
+
+Installation
+============
+
+Make sure you have pygame installed first!
+
+Just download and unpack the source distribution (`bambam.py` file and `data` folder needed).
+
+Then run `python bambam.py` from a commandline. Type "quit" to quit.
+
+Author Info
+============
+
+Rob Galanakis <rob.galanakis@gmail.com>
+
+Forked from Spike Burch's fork (spikeb@gmail.com) at https://launchpad.net/bambam.
