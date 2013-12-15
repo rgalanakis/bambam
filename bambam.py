@@ -30,7 +30,11 @@ from pygame.locals import *
 thisdir = os.path.dirname(os.path.normpath(__file__))
 themes_dir = os.path.join(thisdir, 'themes')
 
-DEFAULT_BGCOLOR = [random.randint(200, 250) for _ in range(3)]
+BACKGROUND_COLORS = {
+    'light': [random.randint(200, 250) for _ in range(3)],
+    'dark': [random.randint(20, 80) for _ in range(3)],
+}
+
 
 # Load image in data/, handling setting of the transparency color key
 def load_image(fullname):
@@ -62,9 +66,9 @@ def load_sound(fullname):
 
 
 def load_resources(resdir, ext, loader):
-    for f in os.listdir(resdir):
-        if fnmatch.fnmatch(f, ext):
-            yield loader(os.path.join(resdir, f))
+    return [loader(os.path.join(resdir, f))
+            for f in os.listdir(resdir)
+            if fnmatch.fnmatch(f, ext)]
 
 
 def process_event(events, quit_pos):
@@ -77,7 +81,7 @@ def process_event(events, quit_pos):
             if event.type == KEYDOWN:
                 if event.key == K_q:
                     quit_pos = 1
-                elif ((event.key == K_u) and (quit_pos == 1)):
+                elif (event.key == K_u) and (quit_pos == 1):
                     quit_pos = 2
                 elif event.key == K_i and quit_pos == 2:
                     quit_pos = 3
@@ -147,12 +151,19 @@ def parseargs():
     p.add_argument(
         '-t', '--theme', default='default',
         help='The theme to use (folder inside "themes").')
+    p.add_argument(
+        '-b', '--background', default='light',
+        help='Choose from [%s] (default: %%(default)s' %
+             sorted(BACKGROUND_COLORS.keys()))
     return p.parse_args()
 
 
-
-
 options = parseargs()
+try:
+    bgcolor = BACKGROUND_COLORS[options.background]
+except KeyError:
+    sys.exit('%s is not a valid background option.'
+             % options.background)
 
 pygame.init()
 
@@ -163,19 +174,25 @@ screenwidth = screen.get_width()
 screenheight = screen.get_height()
 background = pygame.Surface(screen.get_size())
 background = background.convert()
-background.fill(DEFAULT_BGCOLOR)
+background.fill(bgcolor)
 
 screen.blit(background, (0, 0))
 pygame.display.flip()
 
 resdir = os.path.join(themes_dir, options.theme)
-sounds = list(load_resources(resdir, '*.wav', load_sound))
+sounds = load_resources(resdir, '*.wav', load_sound)
 colors = ((0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 0, 255), (255, 255, 0))
-images = list(load_resources(resdir, '*.gif', load_image))
+images = load_resources(resdir, '*.gif', load_image)
 
-quit_pos = 0
 
-clock = pygame.time.Clock()
-while True:
-    clock.tick(60)
-    quit_pos = process_event(pygame.event.get(), quit_pos)
+def main():
+    quit_pos = 0
+
+    clock = pygame.time.Clock()
+    while True:
+        clock.tick(60)
+        quit_pos = process_event(pygame.event.get(), quit_pos)
+
+
+if __name__ == '__main__':
+    main()
