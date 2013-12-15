@@ -35,9 +35,9 @@ def load_image(name):
 
     try:
         image = pygame.image.load(fullname)
-    except pygame.error, message:
-        print "Cannot load image:", name
-        raise SystemExit(message)
+    except pygame.error as ex:
+        print 'Cannot load image:', name
+        raise SystemExit(repr(ex))
     image = image.convert()
     colorkey = image.get_at((0, 0))
     image.set_colorkey(colorkey, RLEACCEL)
@@ -55,9 +55,9 @@ def load_sound(name):
     fullname = os.path.join(datadir, name)
     try:
         sound = pygame.mixer.Sound(fullname)
-    except pygame.error, message:
-        print "Cannot load sound:", fullname
-        raise SystemExit, message
+    except pygame.error as ex:
+        print 'Cannot load sound:', fullname
+        raise SystemExit(repr(ex))
     return sound
 
 
@@ -72,7 +72,7 @@ def process_event(events, quit_pos):
         if event.type == QUIT:
             sys.exit(0)
         elif event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN:
-            #print "eepos: %s" % (quit_pos)
+            #print 'eepos: %s' % (quit_pos)
 
             if event.type == KEYDOWN:
                 if event.key == K_q:
