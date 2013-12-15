@@ -94,8 +94,9 @@ def process_event(events, quit_pos):
                 screen.blit(background, (0, 0))
                 pygame.display.flip()
 
-            # Play a sound 33% of the time
-            if random.randint(0, 2) == 1:
+            # Play a sound 33% of the time,
+            # and if not quiting (don't wake baby while quiting!)
+            if quit_pos == 0 and random.randint(0, 2) == 1:
                 random.choice(sounds).play()
 
             # Print an image 10% of the time or if no letter can be printed.
