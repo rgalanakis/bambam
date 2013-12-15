@@ -1,5 +1,7 @@
 #!/usr/bin/python
-#Copyright (C) 2007-2008 Don Brown 2010 Spike Burch <spikeb@gmail.com>
+# Copyright (C) 2007-2008 Don Brown
+# 2010 Spike Burch <spikeb@gmail.com>
+# 2014 Rob Galanakis <rob.galanakis@gmail.com>
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
@@ -13,6 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
 import fnmatch
 import os
 import random
@@ -26,17 +29,15 @@ from pygame.locals import *
 # figure out the install base to use with image and sound loading
 thisdir = os.path.dirname(os.path.normpath(__file__))
 themes_dir = os.path.join(thisdir, 'themes')
-datadir = os.path.join(themes_dir, 'default')
 
+DEFAULT_BGCOLOR = [random.randint(200, 250) for _ in range(3)]
 
 # Load image in data/, handling setting of the transparency color key
-def load_image(name):
-    fullname = os.path.join(datadir, name)
-
+def load_image(fullname):
     try:
         image = pygame.image.load(fullname)
     except pygame.error as ex:
-        print 'Cannot load image:', name
+        print 'Cannot load image:', fullname
         raise SystemExit(repr(ex))
     image = image.convert()
     colorkey = image.get_at((0, 0))
@@ -49,10 +50,9 @@ class NoneSound(object):
         pass
 
 
-def load_sound(name):
+def load_sound(fullname):
     if not pygame.mixer:
         return NoneSound()
-    fullname = os.path.join(datadir, name)
     try:
         sound = pygame.mixer.Sound(fullname)
     except pygame.error as ex:
@@ -61,10 +61,10 @@ def load_sound(name):
     return sound
 
 
-def load_resources(ext, loader):
-    for f in os.listdir(datadir):
+def load_resources(resdir, ext, loader):
+    for f in os.listdir(resdir):
         if fnmatch.fnmatch(f, ext):
-            yield loader(f)
+            yield loader(os.path.join(resdir, f))
 
 
 def process_event(events, quit_pos):
@@ -110,7 +110,7 @@ def process_event(events, quit_pos):
 def print_image():
     """Prints an image at a random location."""
     global screenheight, screenwidth
-    img = images[random.randint(0, len(images) - 1)]
+    img = random.choice(images)
     w = random.randint(0, screenwidth - img.get_width())
     h = random.randint(0, screenheight - img.get_height())
     screen.blit(img, (w, h))
@@ -125,7 +125,7 @@ def print_letter(key):
     """Prints a letter at a random location."""
     global screenheight, screenwidth
     font = pygame.font.Font(None, 256)
-    text = font.render(chr(key), 1, colors[random.randint(0, len(colors) - 1)])
+    text = font.render(chr(key), 1, random.choice(colors))
     textpos = text.get_rect()
     center = (textpos.width / 2, textpos.height / 2)
     w = random.randint(0 + center[0], screenwidth - center[0])
@@ -141,6 +141,19 @@ if not pygame.font:
 if not pygame.mixer:
     print 'Warning, sound disabled'
 
+
+def parseargs():
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        '-t', '--theme', default='default',
+        help='The theme to use (folder inside "themes").')
+    return p.parse_args()
+
+
+
+
+options = parseargs()
+
 pygame.init()
 
 window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -148,17 +161,17 @@ pygame.display.set_caption('Bam Bam')
 screen = pygame.display.get_surface()
 screenwidth = screen.get_width()
 screenheight = screen.get_height()
-BACKGROUNDCOL = [random.randint(200, 250) for _ in range(3)]
 background = pygame.Surface(screen.get_size())
 background = background.convert()
-background.fill(BACKGROUNDCOL)
+background.fill(DEFAULT_BGCOLOR)
 
 screen.blit(background, (0, 0))
 pygame.display.flip()
 
-sounds = list(load_resources('*.wav', load_sound))
+resdir = os.path.join(themes_dir, options.theme)
+sounds = list(load_resources(resdir, '*.wav', load_sound))
 colors = ((0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 0, 255), (255, 255, 0))
-images = list(load_resources('*.gif', load_image))
+images = list(load_resources(resdir, '*.gif', load_image))
 
 quit_pos = 0
 
