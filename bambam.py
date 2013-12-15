@@ -24,8 +24,9 @@ from pygame.locals import *
 
 
 # figure out the install base to use with image and sound loading
-progInstallBase = os.path.dirname(os.path.normpath(sys.argv[0]))
-datadir = os.path.join(progInstallBase, 'data')
+thisdir = os.path.dirname(os.path.normpath(__file__))
+themes_dir = os.path.join(thisdir, 'themes')
+datadir = os.path.join(themes_dir, 'default')
 
 
 # Load image in data/, handling setting of the transparency color key
