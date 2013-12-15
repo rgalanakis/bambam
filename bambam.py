@@ -76,7 +76,6 @@ def process_event(events, quit_pos):
         if event.type == QUIT:
             sys.exit(0)
         elif event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN:
-            #print 'eepos: %s' % (quit_pos)
 
             if event.type == KEYDOWN:
                 if event.key == K_q:
@@ -95,12 +94,12 @@ def process_event(events, quit_pos):
                 screen.blit(background, (0, 0))
                 pygame.display.flip()
 
-            # Play a sound 50% of the time
-            if random.randint(0, 1) == 1:
+            # Play a sound 33% of the time
+            if random.randint(0, 2) == 1:
                 random.choice(sounds).play()
 
-            # Print an image 20% of the time or if no letter can be printed.
-            if (random.randint(0, 5) == 1
+            # Print an image 10% of the time or if no letter can be printed.
+            if (random.randint(0, 10) == 1
                 or event.type == MOUSEBUTTONDOWN
                 or not is_alpha(event.key)):
                 print_image()
