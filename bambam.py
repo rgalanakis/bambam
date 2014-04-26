@@ -155,26 +155,26 @@ def parseargs():
         '-b', '--background', default='light',
         help='Choose from [%s] (default: %%(default)s' %
              sorted(BACKGROUND_COLORS.keys()))
-    return p.parse_args()
-
+    args = p.parse_args()
+    try:
+        args.bgcolor = BACKGROUND_COLORS[args.background]
+    except KeyError:
+        sys.exit('%s is not a valid background option.'
+                 % args.background)
+    return args
 
 options = parseargs()
-try:
-    bgcolor = BACKGROUND_COLORS[options.background]
-except KeyError:
-    sys.exit('%s is not a valid background option.'
-             % options.background)
 
 pygame.init()
-
 window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption('Bam Bam')
 screen = pygame.display.get_surface()
 screenwidth = screen.get_width()
 screenheight = screen.get_height()
+
 background = pygame.Surface(screen.get_size())
 background = background.convert()
-background.fill(bgcolor)
+background.fill(options.bgcolor)
 
 screen.blit(background, (0, 0))
 pygame.display.flip()
