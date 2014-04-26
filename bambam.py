@@ -14,6 +14,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import print_function
 
 import argparse
 import fnmatch
@@ -36,12 +37,17 @@ BACKGROUND_COLORS = {
 }
 
 
+def warn(s, *a):
+    sys.stderr.write(s % a)
+    sys.stderr.write('\n')
+
+
 # Load image in data/, handling setting of the transparency color key
 def load_image(fullname):
     try:
         image = pygame.image.load(fullname)
     except pygame.error as ex:
-        print 'Cannot load image:', fullname
+        warn('Cannot load image:', fullname)
         raise SystemExit(repr(ex))
     image = image.convert()
     colorkey = image.get_at((0, 0))
@@ -60,7 +66,7 @@ def load_sound(fullname):
     try:
         sound = pygame.mixer.Sound(fullname)
     except pygame.error as ex:
-        print 'Cannot load sound:', fullname
+        warn('Cannot load sound:', fullname)
         raise SystemExit(repr(ex))
     return sound
 
@@ -144,8 +150,8 @@ class BamBam(object):
 
                 # Print an image 10% of the time or if no letter can be printed.
                 if (random.randint(0, 10) == 1
-                    or event.type == MOUSEBUTTONDOWN
-                    or not is_alpha(event.key)):
+                        or event.type == MOUSEBUTTONDOWN
+                        or not is_alpha(event.key)):
                     self.print_image()
                 else:
                     self.print_letter(event.key)
@@ -185,9 +191,9 @@ def main():
     options = parseargs()
 
     if not pygame.font:
-        print 'Warning, fonts disabled'
+        warn('Fonts disabled')
     if not pygame.mixer:
-        print 'Warning, sound disabled'
+        warn('Sound disabled')
 
     pygame.init()
     BamBam(options.bgcolor, options.theme).run()
