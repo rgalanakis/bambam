@@ -24,6 +24,7 @@ import string
 import sys
 
 import pygame
+import pygame.camera
 from pygame.locals import *
 
 
@@ -101,9 +102,34 @@ def parseargs():
     return args
 
 
+class BamBamCamera(object):
+    def __init__(self, display, screenwidth, screenheight):
+
+        cameras = pygame.camera.list_cameras()
+        if not cameras:
+            warn('Camera disabled')
+            self.enabled = False
+            return
+        self.enabled = True
+
+        self.display = display
+        size = 640, 480#screenwidth, screenheight
+        self.camera = pygame.camera.Camera(cameras[0], size, "RGB")
+        self.camera.start()
+        self.snapshot = pygame.surface.Surface(size, 0, self.display)
+
+    def update(self):
+        if not self.enabled:
+            return
+        self.snapshot = self.camera.get_image(self.snapshot)
+        self.display.blit(self.snapshot, (0, 0))
+     #   pygame.display.flip()
+
+
 class BamBam(object):
     def __init__(self, bgcolor, theme):
-        pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.quit_pos = 0
+        display = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         pygame.display.set_caption('Bam Bam')
         self.screen = pygame.display.get_surface()
         self.screenwidth = self.screen.get_width()
@@ -121,7 +147,10 @@ class BamBam(object):
         self.colors = ((0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 0, 255), (255, 255, 0))
         self.images = load_resources(resdir, '*.gif', load_image)
 
-    def process_event(self, events, quit_pos):
+        self.bambamcam = BamBamCamera(
+            display, self.screenwidth, self.screenheight)
+
+    def process_event(self, events):
         for event in events:
             if event.type == QUIT:
                 sys.exit(0)
@@ -129,15 +158,15 @@ class BamBam(object):
 
                 if event.type == KEYDOWN:
                     if event.key == K_q:
-                        quit_pos = 1
-                    elif (event.key == K_u) and (quit_pos == 1):
-                        quit_pos = 2
-                    elif event.key == K_i and quit_pos == 2:
-                        quit_pos = 3
-                    elif event.key == K_t and quit_pos == 3:
+                        self.quit_pos = 1
+                    elif (event.key == K_u) and (self.quit_pos == 1):
+                        self.quit_pos = 2
+                    elif event.key == K_i and self.quit_pos == 2:
+                        self.quit_pos = 3
+                    elif event.key == K_t and self.quit_pos == 3:
                         sys.exit(0)
                     else:
-                        quit_pos = 0
+                        self.quit_pos = 0
 
                 # Clear the background 10% of the time
                 if random.randint(0, 10) == 1:
@@ -146,7 +175,7 @@ class BamBam(object):
 
                 # Play a sound 33% of the time,
                 # and if not quiting (don't wake baby while quiting!)
-                if quit_pos == 0 and random.randint(0, 2) == 1:
+                if self.quit_pos == 0 and random.randint(0, 2) == 1:
                     random.choice(self.sounds).play()
 
                 # Print an image 10% of the time or if no letter can be printed.
@@ -158,7 +187,6 @@ class BamBam(object):
                     self.print_letter(event.key)
 
                 pygame.display.flip()
-        return quit_pos
 
     def print_image(self):
         """Prints an image at a random location."""
@@ -180,12 +208,11 @@ class BamBam(object):
         self.screen.blit(text, textpos)
 
     def run(self):
-        quit_pos = 0
-
         clock = pygame.time.Clock()
         while True:
             clock.tick(60)
-            quit_pos = self.process_event(pygame.event.get(), quit_pos)
+            self.process_event(pygame.event.get())
+            #self.bambamcam.update()
 
 
 def main():
@@ -197,6 +224,8 @@ def main():
         warn('Sound disabled')
 
     pygame.init()
+    pygame.camera.init()
+
     BamBam(options.bgcolor, options.theme).run()
 
 
