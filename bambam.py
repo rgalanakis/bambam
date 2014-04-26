@@ -31,6 +31,7 @@ from pygame.locals import *
 thisdir = os.path.dirname(os.path.normpath(__file__))
 themes_dir = os.path.join(thisdir, 'themes')
 
+# noinspection PyRedeclaration
 BACKGROUND_COLORS = {
     'light': [random.randint(200, 250) for _ in range(3)],
     'dark': [random.randint(20, 80) for _ in range(3)],
