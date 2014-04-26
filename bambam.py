@@ -71,79 +71,9 @@ def load_resources(resdir, ext, loader):
             if fnmatch.fnmatch(f, ext)]
 
 
-def process_event(events, quit_pos):
-    for event in events:
-        if event.type == QUIT:
-            sys.exit(0)
-        elif event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN:
-
-            if event.type == KEYDOWN:
-                if event.key == K_q:
-                    quit_pos = 1
-                elif (event.key == K_u) and (quit_pos == 1):
-                    quit_pos = 2
-                elif event.key == K_i and quit_pos == 2:
-                    quit_pos = 3
-                elif event.key == K_t and quit_pos == 3:
-                    sys.exit(0)
-                else:
-                    quit_pos = 0
-
-            # Clear the background 10% of the time
-            if random.randint(0, 10) == 1:
-                screen.blit(background, (0, 0))
-                pygame.display.flip()
-
-            # Play a sound 33% of the time,
-            # and if not quiting (don't wake baby while quiting!)
-            if quit_pos == 0 and random.randint(0, 2) == 1:
-                random.choice(sounds).play()
-
-            # Print an image 10% of the time or if no letter can be printed.
-            if (random.randint(0, 10) == 1
-                or event.type == MOUSEBUTTONDOWN
-                or not is_alpha(event.key)):
-                print_image()
-            else:
-                print_letter(event.key)
-
-            pygame.display.flip()
-    return quit_pos
-
-
-def print_image():
-    """Prints an image at a random location."""
-    global screenheight, screenwidth
-    img = random.choice(images)
-    w = random.randint(0, screenwidth - img.get_width())
-    h = random.randint(0, screenheight - img.get_height())
-    screen.blit(img, (w, h))
-
-
 def is_alpha(key):
     """Is the key that was pressed alphanumeric."""
     return key < 255 and (chr(key) in string.letters or chr(key) in string.digits)
-
-
-def print_letter(key):
-    """Prints a letter at a random location."""
-    global screenheight, screenwidth
-    font = pygame.font.Font(None, 256)
-    text = font.render(chr(key), 1, random.choice(colors))
-    textpos = text.get_rect()
-    center = (textpos.width / 2, textpos.height / 2)
-    w = random.randint(0 + center[0], screenwidth - center[0])
-    h = random.randint(0 + center[1], screenheight - center[1])
-    textpos.centerx = w
-    textpos.centery = h
-    screen.blit(text, textpos)
-
-# Main application
-#
-if not pygame.font:
-    print 'Warning, fonts disabled'
-if not pygame.mixer:
-    print 'Warning, sound disabled'
 
 
 def parseargs():
@@ -163,35 +93,104 @@ def parseargs():
                  % args.background)
     return args
 
-options = parseargs()
 
-pygame.init()
-window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-pygame.display.set_caption('Bam Bam')
-screen = pygame.display.get_surface()
-screenwidth = screen.get_width()
-screenheight = screen.get_height()
+class BamBam(object):
+    def __init__(self, bgcolor, theme):
+        pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        pygame.display.set_caption('Bam Bam')
+        self.screen = pygame.display.get_surface()
+        self.screenwidth = self.screen.get_width()
+        self.screenheight = self.screen.get_height()
 
-background = pygame.Surface(screen.get_size())
-background = background.convert()
-background.fill(options.bgcolor)
+        self.background = pygame.Surface(self.screen.get_size())
+        self.background = self.background.convert()
+        self.background.fill(bgcolor)
 
-screen.blit(background, (0, 0))
-pygame.display.flip()
+        self.screen.blit(self.background, (0, 0))
+        pygame.display.flip()
 
-resdir = os.path.join(themes_dir, options.theme)
-sounds = load_resources(resdir, '*.wav', load_sound)
-colors = ((0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 0, 255), (255, 255, 0))
-images = load_resources(resdir, '*.gif', load_image)
+        resdir = os.path.join(themes_dir, theme)
+        self.sounds = load_resources(resdir, '*.wav', load_sound)
+        self.colors = ((0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 0, 255), (255, 255, 0))
+        self.images = load_resources(resdir, '*.gif', load_image)
+
+    def process_event(self, events, quit_pos):
+        for event in events:
+            if event.type == QUIT:
+                sys.exit(0)
+            elif event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN:
+
+                if event.type == KEYDOWN:
+                    if event.key == K_q:
+                        quit_pos = 1
+                    elif (event.key == K_u) and (quit_pos == 1):
+                        quit_pos = 2
+                    elif event.key == K_i and quit_pos == 2:
+                        quit_pos = 3
+                    elif event.key == K_t and quit_pos == 3:
+                        sys.exit(0)
+                    else:
+                        quit_pos = 0
+
+                # Clear the background 10% of the time
+                if random.randint(0, 10) == 1:
+                    self.screen.blit(self.background, (0, 0))
+                    pygame.display.flip()
+
+                # Play a sound 33% of the time,
+                # and if not quiting (don't wake baby while quiting!)
+                if quit_pos == 0 and random.randint(0, 2) == 1:
+                    random.choice(self.sounds).play()
+
+                # Print an image 10% of the time or if no letter can be printed.
+                if (random.randint(0, 10) == 1
+                    or event.type == MOUSEBUTTONDOWN
+                    or not is_alpha(event.key)):
+                    self.print_image()
+                else:
+                    self.print_letter(event.key)
+
+                pygame.display.flip()
+        return quit_pos
+
+    def print_image(self):
+        """Prints an image at a random location."""
+        img = random.choice(self.images)
+        w = random.randint(0, self.screenwidth - img.get_width())
+        h = random.randint(0, self.screenheight - img.get_height())
+        self.screen.blit(img, (w, h))
+
+    def print_letter(self, key):
+        """Prints a letter at a random location."""
+        font = pygame.font.Font(None, 256)
+        text = font.render(chr(key), 1, random.choice(self.colors))
+        textpos = text.get_rect()
+        center = (textpos.width / 2, textpos.height / 2)
+        w = random.randint(0 + center[0], self.screenwidth - center[0])
+        h = random.randint(0 + center[1], self.screenheight - center[1])
+        textpos.centerx = w
+        textpos.centery = h
+        self.screen.blit(text, textpos)
+
+    def run(self):
+        quit_pos = 0
+
+        clock = pygame.time.Clock()
+        while True:
+            clock.tick(60)
+            quit_pos = self.process_event(pygame.event.get(), quit_pos)
 
 
 def main():
-    quit_pos = 0
+    options = parseargs()
 
-    clock = pygame.time.Clock()
-    while True:
-        clock.tick(60)
-        quit_pos = process_event(pygame.event.get(), quit_pos)
+    if not pygame.font:
+        print 'Warning, fonts disabled'
+    if not pygame.mixer:
+        print 'Warning, sound disabled'
+
+    pygame.init()
+    BamBam(options.bgcolor, options.theme).run()
 
 
 if __name__ == '__main__':
