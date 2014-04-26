@@ -126,7 +126,6 @@ class BamBamCamera(object):
             return
         self.snapshot = self.camera.get_image(self.snapshot)
         self.display.blit(self.snapshot, self.location)
-        pygame.display.flip()
 
 
 class BamBam(object):
@@ -171,25 +170,23 @@ class BamBam(object):
                     else:
                         self.quit_pos = 0
 
-                # Clear the background 10% of the time
-                if random.randint(0, 10) == 1:
-                    self.screen.blit(self.background, (0, 0))
-                    pygame.display.flip()
-
                 # Play a sound 33% of the time,
                 # and if not quiting (don't wake baby while quiting!)
                 if self.quit_pos == 0 and random.randint(0, 2) == 1:
                     random.choice(self.sounds).play()
+
+                # Clear the background 10% of the time
+                if random.randint(0, 10) == 1:
+                    self.screen.blit(self.background, (0, 0))
+                    return
 
                 # Print an image 10% of the time or if no letter can be printed.
                 if (random.randint(0, 10) == 1
                         or event.type == MOUSEBUTTONDOWN
                         or not is_alpha(event.key)):
                     self.print_image()
-                else:
-                    self.print_letter(event.key)
-
-                pygame.display.flip()
+                    return
+                self.print_letter(event.key)
 
     def print_image(self):
         """Prints an image at a random location."""
@@ -216,6 +213,7 @@ class BamBam(object):
             clock.tick(60)
             self.process_event(pygame.event.get())
             self.bambamcam.update()
+            pygame.display.flip()
 
 
 def main():
