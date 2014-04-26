@@ -104,7 +104,6 @@ def parseargs():
 
 class BamBamCamera(object):
     def __init__(self, display, screenwidth, screenheight):
-
         cameras = pygame.camera.list_cameras()
         if not cameras:
             warn('Camera disabled')
@@ -112,18 +111,22 @@ class BamBamCamera(object):
             return
         self.enabled = True
 
+        size = 640, 480
+        if screenwidth < 800:
+            size = 320, 200
+        self.location = screenwidth / 2 - size[0] / 2, screenheight / 2 - size[1] / 2
+
         self.display = display
-        size = 640, 480#screenwidth, screenheight
         self.camera = pygame.camera.Camera(cameras[0], size, "RGB")
         self.camera.start()
-        self.snapshot = pygame.surface.Surface(size, 0, self.display)
+        self.snapshot = pygame.Surface(size, 0, self.display)
 
     def update(self):
         if not self.enabled:
             return
         self.snapshot = self.camera.get_image(self.snapshot)
-        self.display.blit(self.snapshot, (0, 0))
-     #   pygame.display.flip()
+        self.display.blit(self.snapshot, self.location)
+        pygame.display.flip()
 
 
 class BamBam(object):
@@ -212,7 +215,7 @@ class BamBam(object):
         while True:
             clock.tick(60)
             self.process_event(pygame.event.get())
-            #self.bambamcam.update()
+            self.bambamcam.update()
 
 
 def main():
