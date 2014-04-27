@@ -114,7 +114,7 @@ def parseargs():
 
 class BamBamCamera(object):
     def __init__(self, display, screenwidth, screenheight):
-        size = 420, 280
+        size = 640, 480
         if screenwidth < size[0]:
             size = 320, 200
         self.location = screenwidth / 2 - size[0] / 2, screenheight / 2 - size[1] / 2
