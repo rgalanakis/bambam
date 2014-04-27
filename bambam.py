@@ -93,43 +93,45 @@ def parseargs():
         '-b', '--background', default='light',
         help='Choose from [%s] (default: %%(default)s' %
              sorted(BACKGROUND_COLORS.keys()))
+    p.add_argument(
+        '-c', '--camera', action='store_true',
+        help='If present and supported, render the webcame in the foreground.'
+    )
     args = p.parse_args()
+
+    # Fix up the bgcolor
     try:
         args.bgcolor = BACKGROUND_COLORS[args.background]
     except KeyError:
         sys.exit('%s is not a valid background option.'
                  % args.background)
+
+    # Fix up the camera
+    if args.camera and not pygame.camera.list_cameras():
+        sys.exit('Camera requested but not supported')
     return args
 
 
 class BamBamCamera(object):
     def __init__(self, display, screenwidth, screenheight):
-        cameras = pygame.camera.list_cameras()
-        if not cameras:
-            warn('Camera disabled')
-            self.enabled = False
-            return
-        self.enabled = True
-
-        size = 640, 480
-        if screenwidth < 800:
+        size = 420, 280
+        if screenwidth < size[0]:
             size = 320, 200
         self.location = screenwidth / 2 - size[0] / 2, screenheight / 2 - size[1] / 2
 
         self.display = display
-        self.camera = pygame.camera.Camera(cameras[0], size, "RGB")
+        self.camera = pygame.camera.Camera(
+            pygame.camera.list_cameras()[0], size, "RGB")
         self.camera.start()
         self.snapshot = pygame.Surface(size, 0, self.display)
 
     def update(self):
-        if not self.enabled:
-            return
         self.snapshot = self.camera.get_image(self.snapshot)
         self.display.blit(self.snapshot, self.location)
 
 
 class BamBam(object):
-    def __init__(self, bgcolor, theme):
+    def __init__(self, bgcolor, theme, use_camera):
         self.quit_pos = 0
         display = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         pygame.display.set_caption('Bam Bam')
@@ -149,8 +151,10 @@ class BamBam(object):
         self.colors = ((0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 0, 255), (255, 255, 0))
         self.images = load_resources(resdir, '*.gif', load_image)
 
-        self.bambamcam = BamBamCamera(
-            display, self.screenwidth, self.screenheight)
+        self.bambamcam = None
+        if use_camera:
+            self.bambamcam = BamBamCamera(
+                display, self.screenwidth, self.screenheight)
 
     def process_event(self, events):
         for event in events:
@@ -186,6 +190,7 @@ class BamBam(object):
                         or not is_alpha(event.key)):
                     self.print_image()
                     return
+
                 self.print_letter(event.key)
 
     def print_image(self):
@@ -212,11 +217,15 @@ class BamBam(object):
         while True:
             clock.tick(60)
             self.process_event(pygame.event.get())
-            self.bambamcam.update()
+            if self.bambamcam:
+                self.bambamcam.update()
             pygame.display.flip()
 
 
 def main():
+    pygame.init()
+    pygame.camera.init()
+
     options = parseargs()
 
     if not pygame.font:
@@ -224,10 +233,7 @@ def main():
     if not pygame.mixer:
         warn('Sound disabled')
 
-    pygame.init()
-    pygame.camera.init()
-
-    BamBam(options.bgcolor, options.theme).run()
+    BamBam(options.bgcolor, options.theme, options.camera).run()
 
 
 if __name__ == '__main__':
